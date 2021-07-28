@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title></title>
+<link rel="stylesheet" href="css/reset.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="swipe-photo">
+    <ul class="swipe-photo-container clearfix">
+        <li class="swipe-photo-item"><img src="img/0.jpg" class="swipe-photo-thumbnail"></li>
+        <li class="swipe-photo-item"><img src="img/1.jpg" class="swipe-photo-thumbnail"></li>
+        <li class="swipe-photo-item"><img src="img/2.jpg" class="swipe-photo-thumbnail"></li>
+        <li class="swipe-photo-item"><img src="img/3.jpg" class="swipe-photo-thumbnail"></li>
+        <li class="swipe-photo-item"><img src="img/4.jpg" class="swipe-photo-thumbnail"></li>
+        <li class="swipe-photo-item"><img src="img/5.jpg" class="swipe-photo-thumbnail"></li>
+    </ul>
+</div>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript">
+// ここまでたどり着いたあなたは勇者です。
+// 今回やるのはフリックです。
+// 指を動かしている間は .swipe-photo-container が移動し、離したときに一番近い要素の位置までアニメーションします。
+// 挙動はanswerの方を良く見て確認しましょう。
+// x座標の取得方法
+// function(e) {
+//     e.originalEvent.changedTouches[0].pageX;
+// }
+// onに複数のイベントを貼る方法
+// $(".hoge").on({
+//     "event": function() { },
+//     "event": function() { }
+// });
+// touchstart タッチしたタイミングを取ります。
+// touchmove タッチしたあとの動いてる状態を取ります。(たくさんイベントが発生します。)
+// touchend タッチを離したタイミングを取ります。
+// あとは座標をごにょごにょいじるだけです。配列使います。ちょっと難しいです。
+$(function(){
+  var spc =$(".swipe-photo-container"); //ul要素
+      length = $(".swipe-photo-item").length,//imgの数
+      imageWidth = $(".swipe-photo-item").width(),//imgのサイズ
+      spc.width(imageWidth*length);//ulの横幅 1920px
+      startX = 0,//スタートの座標
+      endX = 0,//フリック後の座標
+      diffX = 0,//移動幅
+      left = 0,//ulのleftの値
+      posiX = [];//移動幅の指定
+      for(var i=0;i <= length;i++){//0, -320 ,-640 , -960 ,-1280 , -1600 ,-1920を配列に格納。
+        posiX[i] = -imageWidth*i;
+      }
+  spc.on({
+    "touchstart": function(e){//タッチ時の処理
+      startX = e.originalEvent.changedTouches[0].pageX;//タッチ時のX座標を格納。
+      left = spc.position().left; //ulのleftの値を格納。最初は0、前にスクロール済ならマイナスの値が入ってくる。
+     },
+    "touchmove":function(e){
+      e.preventDefault();
+      endX = e.originalEvent.changedTouches[0].pageX;//フリック後の座標を格納
+      diffX = left - (startX - endX); //「ulのleft」- （「タッチ時座標」-「フリック後座標」）が移動幅になる
+      //例 左フリック -320 - (300 - 50) = -570
+      //例 右フリック -320 - (50 - 300) = -70
+      if(diffX > 0){
+        diffX = 0; //移動幅が0を超えたら左端の画面外にいってしまうので、0を格納
+      }else if(diffX < posiX[length-1]){
+        diffX = posiX[length-1];//移動幅が-1600を超えたら右端の画面外にいってしまうので、-1600を格納
+      }
+      spc.css({left:diffX}); //ulに移動幅をleftに指定。
+      },
+      "touchend": function(e){//離したときに一番近い要素の位置までアニメーションする処理
+        var e = 0;//空の変数用意
+        for(var i = 0;i < length;i++){
+          if(posiX[i] + (imageWidth/2) > diffX  && diffX >= posiX[i+1] + (imageWidth/2)){
+            //例 移動する画像が-320pxの時の画像の場合、-160 〜 -480間にdiffXの値がある場合に-320pxの位置に移動される。
+            //それを計算するため(imageWidth/2)を足している。
+            //例 diffXが-400の場合、
+            //   posiX[1] + -160 > -400 && -400 >= posiX[2] + 160
+            //   -160 > -400 && -400 >= -480 ←for文とif文でどのposition値か、計算した場合この式がtrueになる
+            //   そのためdiffが-400の場合はposiX[1]の-320がleftの値になる
+            e = i;
+          }
+        }
+        spc.animate({left:posiX[e]},300);
+      }
+  });
+});
+
+
+</script>
+</body>
+</html>
